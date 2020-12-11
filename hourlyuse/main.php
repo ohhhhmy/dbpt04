@@ -1,5 +1,5 @@
 <?php
-
+  header("Content-Type: text/html; charset=UTF-8");
 ?>
 <html>
   <head>
@@ -105,7 +105,7 @@
       </select>
       <input type="submit" value="조회">
     </form>
-    <h3> 장소를 검색해보세요. 이용정보를 알려드립니다. </h3>
+    <h3> 장소를 검색해보세요. 이용건수가 많은 상위 10개 대여소 정보를 알려드립니다. </h3>
     <form action="search.php" method="POST">
       <input type="text" name = "search" placeholder="대여소번호, 대여소명 등">
       <br>
@@ -113,5 +113,4 @@
       <input type="submit" value="검색">
     </form>
   </body>
-
 </html>

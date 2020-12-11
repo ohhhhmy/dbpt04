@@ -1,4 +1,5 @@
 <?php
+  header("Content-Type: text/html; charset=UTF-8");
   date_default_timezone_set('Asia/Seoul');
 
   $link = mysqli_connect('localhost', 'root', 'gees00409', 'dbpfinal');
@@ -9,17 +10,31 @@
       $renttime = date("H");
   }
 
-  $query = "select rentalshops.rentalshop, sum(hourlyuse.usage) as s from hourlyuse join rentalshops on hourlyuse.rentplace = rentalshops.rentplace where rentalshops.gu='{$rentplace}' and hourlyuse.renttime='{$renttime}' group by hourlyuse.renttime, rentalshops.rentalshop order by s limit 300";
-  $rows = mysqli_query($link, $query);
-  $rowResult = '';
-  while ($row = mysqli_fetch_assoc($rows)) {
-      $rowResult .= '<tr>';
-      $rowResult .= '<td>'.$row['rentalshop'].'</td>';
-      $rowResult .= '<td>'.$row['s'].'</td>';
-      $rowResult .= '</tr>';
+  $maxQuery = "select location.loc_name, sum(hourlyuse.usage) as s from hourlyuse join location on hourlyuse.rentplace = location.loc_id where location.gu='{$rentplace}' and hourlyuse.renttime='{$renttime}' group by hourlyuse.renttime, location.loc_name order by s desc limit 5";
+  $minQuery = "select location.loc_name, sum(hourlyuse.usage) as s from hourlyuse join location on hourlyuse.rentplace = location.loc_id where location.gu='{$rentplace}' and hourlyuse.renttime='{$renttime}' group by hourlyuse.renttime, location.loc_name order by s limit 5";
+
+  $maxRows = mysqli_query($link, $maxQuery);
+  $minRows = mysqli_query($link, $minQuery);
+
+  $maxResult = '';
+  $minResult = '';
+
+  while ($minRow = mysqli_fetch_assoc($minRows)) {
+      $minResult .= '<tr>';
+      $minResult .= '<td>'.$minRow['loc_name'].'</td>';
+      $minResult .= '<td>'.$minRow['s'].'</td>';
+      $minResult .= '</tr>';
   }
 
-  if ($rows == false) {
+  while ($maxRow = mysqli_fetch_assoc($maxRows)) {
+      $maxResult .= '<tr>';
+      $maxResult .= '<td>'.$maxRow['loc_name'].'</td>';
+      $maxResult .= '<td>'.$maxRow['s'].'</td>';
+      $maxResult .= '</tr>';
+  }
+
+
+  if ($maxRows == false || $minRows == false) {
       echo '조회 과정에서 문제가 발생했습니다. 관리자에게 문의하세요.';
       echo "<a href='main.php'> 돌아가기 </a>";
       error_log(mysqli_error($link));
@@ -31,15 +46,27 @@
       <title> 시간대 별 이용 복잡도 </title>
   </head>
   <body>
-    <h3> 입력하신 <?= $renttime ?> 시간 대 <?= $rentplace ?> 에서 최소로 복잡한 대여소 정보입니다.  </h3>
+    <h3> 연령대별 정보 | <a href="main.php"> Home </a>
+    <h3> 입력하신 <?= $renttime ?> 시간대 <?= $rentplace ?> 에서 최고로 복잡한 대여소 정보입니다.  </h3>
     <table border=1>
       <tr>
           <th> 대여소명 </th>
           <th> 이용건수 </th>
       </tr>
-      <?= $rowResult ?>
+      <?= $maxResult ?>
     </table>
+    <h3> <?= $renttime ?> 시간대 <?= $rentplace ?> 지역에서 이용건수가 가장 적은 아래의 대여소를 추천해드립니다.  </h3>
+    <table border=1>
+      <tr>
+          <th> 대여소명 </th>
+          <th> 이용건수 </th>
+      </tr>
+      <?= $minResult ?>
+    </table>
+    <br>
     * 시간과 이용건수: 해당 시간부터 1시간 내 대여 건수의 합입니다.
+    <br>
+    * 상위 5개의 정보를 제공합니다.
   </body>
 
 </html>
